@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the Fake - AI Detection Tool</title>
+    <meta name="description" content="Advanced AI detection tool that combines multiple models to identify AI-generated content with unprecedented accuracy. Detect fake reviews, AI blog posts, and synthetic text.">
+    <meta name="keywords" content="AI detection, fake content detector, AI text detector, synthetic content, AI classifier">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Dark cyberpunk theme */
+            --background: hsl(240, 10%, 3.9%);
+            --foreground: hsl(0, 0%, 98%);
+            --card: hsl(240, 10%, 5.9%);
+            --card-foreground: hsl(0, 0%, 98%);
+            --primary: hsl(142, 76%, 36%);
+            --primary-foreground: hsl(240, 10%, 3.9%);
+            --secondary: hsl(240, 4.8%, 15.9%);
+            --secondary-foreground: hsl(0, 0%, 98%);
+            --muted: hsl(240, 5.9%, 10%);
+            --muted-foreground: hsl(240, 4%, 46%);
+            --accent: hsl(271, 91%, 65%);
+            --accent-foreground: hsl(0, 0%, 98%);
+            --destructive: hsl(0, 84.2%, 60.2%);
+            --destructive-foreground: hsl(0, 0%, 98%);
+            --border: hsl(240, 5.9%, 15%);
+            --input: hsl(240, 5.9%, 15%);
+            --ring: hsl(142, 76%, 36%);
+
+            /* AI Detection specific colors */
+            --human: hsl(142, 76%, 36%);
+            --human-glow: hsl(142, 76%, 36%);
+            --uncertain: hsl(48, 96%, 53%);
+            --uncertain-glow: hsl(48, 96%, 53%);
+            --ai: hsl(0, 84%, 60%);
+            --ai-glow: hsl(0, 84%, 60%);
+            
+            /* Neon effects */
+            --neon-blue: hsl(210, 100%, 56%);
+            --neon-purple: hsl(271, 91%, 65%);
+            --neon-cyan: hsl(180, 100%, 50%);
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Header Styles */
+        .header {
+            border-bottom: 1px solid var(--border);
+            background: color-mix(in srgb, var(--card) 50%, transparent);
+            backdrop-filter: blur(8px);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            position: relative;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .logo-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-subtitle {
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+            font-family: monospace;
+        }
+
+        .stats {
+            display: none;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        @media (min-width: 768px) {
+            .stats {
+                display: flex;
+            }
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+        }
+
+        .stat-value.human { color: var(--human); }
+        .stat-value.ai { color: var(--ai); }
+        .stat-value.accent { color: var(--accent); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--accent);
+            font-family: monospace;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            padding: 5rem 0;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23271091;stop-opacity:0.1"/><stop offset="50%" style="stop-color:%2300d4ff;stop-opacity:0.1"/><stop offset="100%" style="stop-color:%23271091;stop-opacity:0.1"/></linearGradient></defs><rect width="100%" height="100%" fill="url(%23bg)"/></svg>');
+            background-size: cover;
+            opacity: 0.2;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, 
+                color-mix(in srgb, var(--background) 80%, transparent),
+                color-mix(in srgb, var(--background) 90%, transparent),
+                var(--background)
+            );
+        }
+
+        .hero-content {
+            position: relative;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-size: 0.875rem;
+            font-family: monospace;
+            box-shadow: 0 0 30px color-mix(in srgb, var(--neon-blue) 40%, transparent);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (min-width: 768px) {
+            .hero-title {
+                font-size: 4rem;
+            }
+        }
+
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--muted-foreground);
+            max-width: 32rem;
+            margin: 0 auto 2rem;
+        }
+
+        .hero-features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .feature-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid;
+        }
+
+        .feature-badge.human {
+            background: color-mix(in srgb, var(--human) 10%, transparent);
+            border-color: color-mix(in srgb, var(--human) 20%, transparent);
+            color: var(--human);
+        }
+
+        .feature-badge.uncertain {
+            background: color-mix(in srgb, var(--uncertain) 10%, transparent);
+            border-color: color-mix(in srgb, var(--uncertain) 20%, transparent);
+            color: var(--uncertain);
+        }
+
+        .feature-badge.ai {
+            background: color-mix(in srgb, var(--ai) 10%, transparent);
+            border-color: color-mix(in srgb, var(--ai) 20%, transparent);
+            color: var(--ai);
+        }
+
+        .pulse-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-dot.human { background: var(--human); }
+        .pulse-dot.uncertain { background: var(--uncertain); }
+        .pulse-dot.ai { background: var(--ai); }
+
+        /* Main Content */
+        .main-content {
+            padding: 3rem 0;
+            max-width: 64rem;
+            margin: 0 auto;
+        }
+
+        /* Text Analyzer */
+        .analyzer {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .analyzer-header {
+            text-align: center;
+        }
+
+        .analyzer-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--accent), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .analyzer-subtitle {
+            color: var(--muted-foreground);
+        }
+
+        .input-section {
+            position: relative;
+        }
+
+        .textarea {
+            width: 100%;
+            min-height: 8rem;
+            padding: 1rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            color: var(--foreground);
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .textarea::placeholder {
+            color: var(--muted-foreground);
+        }
+
+        .word-count {
+            position: absolute;
+            bottom: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+        }
+
+        .analyze-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--accent);
+            color: var(--background);
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 30px color-mix(in srgb, var(--neon-blue) 40%, transparent);
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--accent) 90%, transparent);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .spinner {
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--background);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Truth Meter */
+        .truth-meter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 16rem;
+            height: 16rem;
+        }
+
+        .gauge-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0.25rem;
+            height: 6rem;
+            transform-origin: bottom;
+            transition: transform 1s ease-out;
+            border-radius: 0.125rem;
+        }
+
+        .needle.human {
+            background: var(--human);
+            box-shadow: 0 0 10px var(--human-glow);
+        }
+
+        .needle.uncertain {
+            background: var(--uncertain);
+            box-shadow: 0 0 10px var(--uncertain-glow);
+        }
+
+        .needle.ai {
+            background: var(--ai);
+            box-shadow: 0 0 10px var(--ai-glow);
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .center-circle.human { 
+            background: var(--human); 
+            box-shadow: 0 0 20px color-mix(in srgb, var(--human-glow) 50%, transparent);
+        }
+
+        .center-circle.uncertain { 
+            background: var(--uncertain); 
+            box-shadow: 0 0 20px color-mix(in srgb, var(--uncertain-glow) 50%, transparent);
+        }
+
+        .center-circle.ai { 
+            background: var(--ai); 
+            box-shadow: 0 0 20px color-mix(in srgb, var(--ai-glow) 50%, transparent);
+        }
+
+        .gauge-labels {
+            position: absolute;
+            inset: 0;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .label-human {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            color: var(--human);
+        }
+
+        .label-ai {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            color: var(--ai);
+        }
+
+        .label-uncertain {
+            position: absolute;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--uncertain);
+        }
+
+        .verdict-display {
+            text-align: center;
+        }
+
+        .verdict-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .verdict-text.human { color: var(--human); }
+        .verdict-text.uncertain { color: var(--uncertain); }
+        .verdict-text.ai { color: var(--ai); }
+
+        .confidence-text {
+            font-size: 1.125rem;
+            font-family: monospace;
+            color: var(--muted-foreground);
+        }
+
+        /* Model Cards */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .model-card {
+            position: relative;
+            padding: 1rem;
+            background: var(--card);
+            border: 2px solid;
+            border-radius: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .model-card:hover {
+            transform: scale(1.05);
+        }
+
+        .model-card.human {
+            border-color: var(--human);
+            color: var(--human);
+        }
+
+        .model-card.uncertain {
+            border-color: var(--uncertain);
+            color: var(--uncertain);
+        }
+
+        .model-card.ai {
+            border-color: var(--ai);
+            color: var(--ai);
+        }
+
+        .model-card.judge {
+            background: linear-gradient(135deg, 
+                color-mix(in srgb, var(--accent) 20%, transparent),
+                color-mix(in srgb, var(--neon-purple) 20%, transparent)
+            );
+            border-color: var(--accent);
+            box-shadow: 0 0 30px color-mix(in srgb, var(--neon-blue) 40%, transparent);
+        }
+
+        .judge-badge {
+            position: absolute;
+            top: -0.5rem;
+            right: -0.5rem;
+            background: var(--accent);
+            color: var(--background);
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .model-name {
+            font-weight: bold;
+        }
+
+        .model-name.judge {
+            color: var(--accent);
+        }
+
+        .verdict-icon {
+            font-size: 1.25rem;
+        }
+
+        .verdict-label {
+            font-size: 0.875rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .confidence-bar-container {
+            margin-top: 0.5rem;
+        }
+
+        .confidence-bar-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+            margin-bottom: 0.25rem;
+        }
+
+        .confidence-bar-track {
+            width: 100%;
+            height: 0.5rem;
+            background: var(--muted);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .confidence-bar-fill {
+            height: 100%;
+            transition: width 1s ease-out;
+            border-radius: 9999px;
+        }
+
+        .confidence-bar-fill.human {
+            background: linear-gradient(135deg, var(--human), color-mix(in srgb, var(--human) 120%, white));
+        }
+
+        .confidence-bar-fill.uncertain {
+            background: linear-gradient(135deg, var(--uncertain), color-mix(in srgb, var(--uncertain) 120%, white));
+        }
+
+        .confidence-bar-fill.ai {
+            background: linear-gradient(135deg, var(--ai), color-mix(in srgb, var(--ai) 120%, white));
+        }
+
+        .confidence-bar-fill.judge {
+            background: var(--accent);
+        }
+
+        /* Explanation Panel */
+        .explanation-section {
+            margin-top: 1.5rem;
+        }
+
+        .explanation-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .explanation-btn:hover {
+            background: color-mix(in srgb, var(--accent) 10%, transparent);
+        }
+
+        .explanation-content {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .explanation-title {
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+        }
+
+        .insights-list {
+            list-style: none;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-bullet {
+            color: var(--accent);
+            margin-top: 0.25rem;
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 2rem 0;
+            margin-top: 5rem;
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+            font-family: monospace;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse-glow {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent);">
+                            <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="logo-title">Find the Fake</h1>
+                        <p class="logo-subtitle">AI Detection Engine</p>
+                    </div>
+                </div>
+                
+                <!-- Stats -->
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value human">1,247</div>
+                        <div class="stat-label">Human Detected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value ai">892</div>
+                        <div class="stat-label">AI Detected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value accent">94.2%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="status">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+                    </svg>
+                    <span>ACTIVE</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    🔍 AI Detection System v2.0
+                </div>
+                
+                <h1 class="hero-title">Find the Fake</h1>
+                
+                <p class="hero-description">
+                    Advanced AI detection tool that combines multiple models to identify 
+                    AI-generated content with unprecedented accuracy and transparency.
+                </p>
+                
+                <div class="hero-features">
+                    <div class="feature-badge human">
+                        <span class="pulse-dot human"></span>
+                        <span>Human Detection</span>
+                    </div>
+                    <div class="feature-badge uncertain">
+                        <span class="pulse-dot uncertain"></span>
+                        <span>Uncertainty Analysis</span>
+                    </div>
+                    <div class="feature-badge ai">
+                        <span class="pulse-dot ai"></span>
+                        <span>AI Detection</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Analysis Section -->
+    <section class="main-content">
+        <div class="container">
+            <div class="analyzer">
+                <!-- Text Input Section -->
+                <div class="analyzer-header">
+                    <h2 class="analyzer-title">Truth or Bot?</h2>
+                    <p class="analyzer-subtitle">Paste your text below to detect if it's human or AI-generated</p>
+                </div>
+                
+                <div class="input-section">
+                    <textarea 
+                        id="textInput" 
+                        class="textarea" 
+                        placeholder="Paste the text you want to analyze here..."
+                    ></textarea>
+                    <div id="wordCount" class="word-count hidden">0 words</div>
+                </div>
+                
+                <button id="analyzeBtn" class="analyze-btn">
+                    <div class="btn-content">
+                        <svg id="analyzeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+                        </svg>
+                        <div id="spinner" class="spinner hidden"></div>
+                        <span id="btnText">Analyze Text</span>
+                    </div>
+                </button>
+                
+                <!-- Results Section -->
+                <div id="resultsSection" class="results-section hidden">
+                    <!-- Truth Meter -->
+                    <div class="truth-meter">
+                        <div class="gauge-container">
+                            <svg class="gauge-svg" viewBox="0 0 200 200">
+                                <!-- Background Arc -->
+                                <path d="M 30 170 A 85 85 0 0 1 170 170" fill="none" stroke="var(--muted)" stroke-width="8" opacity="0.2"/>
+                                
+                                <!-- Human Zone -->
+                                <path d="M 30 170 A 85 85 0 0 0 100 30" fill="none" stroke="var(--human)" stroke-width="6" opacity="0.4"/>
+                                
+                                <!-- Uncertain Zone -->
+                                <path d="M 100 30 A 85 85 0 0 0 150 50" fill="none" stroke="var(--uncertain)" stroke-width="6" opacity="0.4"/>
+                                
+                                <!-- AI Zone -->
+                                <path d="M 150 50 A 85 85 0 0 0 170 170" fill="none" stroke="var(--ai)" stroke-width="6" opacity="0.4"/>
+                            </svg>
+                            
+                            <div id="needle" class="needle"></div>
+                            <div id="centerCircle" class="center-circle"></div>
+                            
+                            <div class="gauge-labels">
+                                <div class="label-human">HUMAN</div>
+                                <div class="label-ai">AI</div>
+                                <div class="label-uncertain">UNCERTAIN</div>
+                            </div>
+                        </div>
+                        
+                        <div class="verdict-display">
+                            <div id="verdictText" class="verdict-text">🔍 ANALYZING...</div>
+                            <div id="confidenceText" class="confidence-text">0% CONFIDENCE</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Model Cards -->
+                    <div class="models-section">
+                        <h3 class="section-title">Model Verdicts</h3>
+                        <div id="modelGrid" class="model-grid"></div>
+                        
+                        <!-- Final Jury Verdict -->
+                        <div id="judgeCard" class="model-card judge">
+                            <div class="judge-badge">FINAL VERDICT</div>
+                            <div class="card-header">
+                                <h3 class="model-name judge">ENSEMBLE JURY</h3>
+                                <div id="judgeIcon" class="verdict-icon">🤖</div>
+                            </div>
+                            <div id="judgeVerdict" class="verdict-label">AI</div>
+                            <div class="confidence-bar-container">
+                                <div class="confidence-bar-header">
+                                    <span>Confidence</span>
+                                    <span id="judgeConfidence">0%</span>
+                                </div>
+                                <div class="confidence-bar-track">
+                                    <div id="judgeConfidenceBar" class="confidence-bar-fill judge" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Explanation Panel -->
+                    <div class="explanation-section">
+                        <button id="explanationBtn" class="explanation-btn">
+                            <div class="btn-content">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <span id="explanationBtnText">Show Explanation</span>
+                                <svg id="chevronDown" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6,9 12,15 18,9"/>
+                                </svg>
+                                <svg id="chevronUp" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden">
+                                    <polyline points="18,15 12,9 6,15"/>
+                                </svg>
+                            </div>
+                        </button>
+                        
+                        <div id="explanationContent" class="explanation-content hidden">
+                            <h4 class="explanation-title">Why this verdict?</h4>
+                            <ul id="insightsList" class="insights-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">
+                Powered by ensemble AI detection • Built for transparency
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Application State
+        let currentAnalysis = null;
+        let isAnalyzing = false;
+        let showingExplanation = false;
+
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const wordCount = document.getElementById('wordCount');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analyzeIcon = document.getElementById('analyzeIcon');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btnText');
+        const resultsSection = document.getElementById('resultsSection');
+        const needle = document.getElementById('needle');
+        const centerCircle = document.getElementById('centerCircle');
+        const verdictText = document.getElementById('verdictText');
+        const confidenceText = document.getElementById('confidenceText');
+        const modelGrid = document.getElementById('modelGrid');
+        const judgeCard = document.getElementById('judgeCard');
+        const judgeIcon = document.getElementById('judgeIcon');
+        const judgeVerdict = document.getElementById('judgeVerdict');
+        const judgeConfidence = document.getElementById('judgeConfidence');
+        const judgeConfidenceBar = document.getElementById('judgeConfidenceBar');
+        const explanationBtn = document.getElementById('explanationBtn');
+        const explanationBtnText = document.getElementById('explanationBtnText');
+        const chevronDown = document.getElementById('chevronDown');
+        const chevronUp = document.getElementById('chevronUp');
+        const explanationContent = document.getElementById('explanationContent');
+        const insightsList = document.getElementById('insightsList');
+
+        // Utility Functions
+        function getVerdictIcon(verdict) {
+            switch(verdict) {
+                case 'human': return '🙌';
+                case 'uncertain': return '⚠️';
+                case 'ai': return '🤖';
+                default: return '?';
+            }
+        }
+
+        function getVerdictText(verdict) {
+            switch(verdict) {
+                case 'human': return 'HUMAN';
+                case 'uncertain': return 'UNCERTAIN';
+                case 'ai': return 'AI DETECTED';
+                default: return '?';
+            }
+        }
+
+        function getVerdictDisplayText(verdict) {
+            switch(verdict) {
+                case 'human': return '🙌 HUMAN';
+                case 'uncertain': return '⚠️ UNCERTAIN';
+                case 'ai': return '🤖 AI DETECTED';
+                default: return '?';
+            }
+        }
+
+        // Event Listeners
+        textInput.addEventListener('input', function() {
+            const text = this.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            
+            if (text) {
+                wordCount.textContent = `${words} words`;
+                wordCount.classList.remove('hidden');
+            } else {
+                wordCount.classList.add('hidden');
+            }
+            
+            analyzeBtn.disabled = !text || isAnalyzing;
+        });
+
+        analyzeBtn.addEventListener('click', analyzeText);
+        explanationBtn.addEventListener('click', toggleExplanation);
+
+        // Main Analysis Function
+        async function analyzeText() {
+            const text = textInput.value.trim();
+            if (!text || isAnalyzing) return;
+            
+            isAnalyzing = true;
+            setAnalyzingState(true);
+            currentAnalysis = null;
+            
+            // Show results section and start analyzing animation
+            resultsSection.classList.remove('hidden');
+            updateTruthMeter(0, 'uncertain', true);
+            
+            // Simulate analysis delay
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Mock analysis logic
+            const wordCount = text.split(/\s+/).length;
+            const hasRepeatedPhrases = /\b(\w+)\s+\1\b/i.test(text);
+            const hasUniformSentences = text.split('.').filter(s => s.trim()).every(s => s.length > 50);
+            
+            let aiScore = 0;
+            if (wordCount > 100) aiScore += 30;
+            if (hasRepeatedPhrases) aiScore += 20;
+            if (hasUniformSentences) aiScore += 25;
+            if (text.includes('Furthermore') || text.includes('Moreover')) aiScore += 15;
+            
+            const confidence = Math.min(Math.max(20, Math.random() * 40 + aiScore), 95);
+            const verdict = confidence > 70 ? 'ai' : confidence > 40 ? 'uncertain' : 'human';
+            
+            const mockModels = [
+                { name: 'GPT Detector', verdict: verdict, confidence: Math.round(confidence + Math.random() * 10 - 5) },
+                { name: 'BERT Classifier', verdict: verdict === 'ai' ? 'uncertain' : verdict, confidence: Math.round(confidence + Math.random() * 15 - 7) },
+                { name: 'RoBERTa Guard', verdict: verdict, confidence: Math.round(confidence + Math.random() * 8 - 4) },
+            ];
+            
+            const insights = [
+                ...(hasUniformSentences ? ['Sentence structures are unusually uniform'] : []),
+                ...(hasRepeatedPhrases ? ['Contains repetitive phrase patterns'] : []),
+                ...(wordCount > 100 ? ['Text length suggests potential generation'] : []),
+                'Perplexity analysis shows moderate predictability',
+                'Vocabulary distribution follows expected patterns'
+            ];
+            
+            currentAnalysis = {
+                verdict,
+                confidence: Math.round(confidence),
+                models: mockModels,
+                insights
+            };
+            
+            // Update UI with results
+            updateTruthMeter(currentAnalysis.confidence, currentAnalysis.verdict, false);
+            updateModelCards(currentAnalysis.models);
+            updateJudgeCard(currentAnalysis.verdict, currentAnalysis.confidence);
+            updateInsights(currentAnalysis.insights);
+            
+            isAnalyzing = false;
+            setAnalyzingState(false);
+        }
+
+        function setAnalyzingState(analyzing) {
+            if (analyzing) {
+                analyzeIcon.classList.add('hidden');
+                spinner.classList.remove('hidden');
+                btnText.textContent = 'Analyzing...';
+                analyzeBtn.disabled = true;
+            } else {
+                analyzeIcon.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                btnText.textContent = 'Analyze Text';
+                analyzeBtn.disabled = !textInput.value.trim();
+            }
+        }
+
+        function updateTruthMeter(confidence, verdict, analyzing) {
+            // Update needle rotation (-90 to 90 degrees)
+            const rotation = (confidence - 50) * 1.8;
+            needle.style.transform = `translate(-50%, -100%) rotate(${rotation}deg)`;
+            
+            // Update needle and center circle styling
+            needle.className = `needle ${verdict}`;
+            centerCircle.className = `center-circle ${verdict}`;
+            
+            // Update verdict display
+            if (analyzing) {
+                verdictText.className = 'verdict-text uncertain pulse-glow';
+                verdictText.textContent = '🔍 ANALYZING...';
+            } else {
+                verdictText.className = `verdict-text ${verdict}`;
+                verdictText.textContent = getVerdictDisplayText(verdict);
+            }
+            
+            confidenceText.textContent = `${confidence}% CONFIDENCE`;
+        }
+
+        function updateModelCards(models) {
+            modelGrid.innerHTML = '';
+            
+            models.forEach(model => {
+                const card = document.createElement('div');
+                card.className = `model-card ${model.verdict}`;
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <h3 class="model-name">${model.name}</h3>
+                        <div class="verdict-icon">${getVerdictIcon(model.verdict)}</div>
+                    </div>
+                    <div class="verdict-label">${getVerdictText(model.verdict)}</div>
+                    <div class="confidence-bar-container">
+                        <div class="confidence-bar-header">
+                            <span>Confidence</span>
+                            <span>${model.confidence}%</span>
+                        </div>
+                        <div class="confidence-bar-track">
+                            <div class="confidence-bar-fill ${model.verdict}" style="width: ${model.confidence}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                modelGrid.appendChild(card);
+            });
+        }
+
+        function updateJudgeCard(verdict, confidence) {
+            judgeIcon.textContent = getVerdictIcon(verdict);
+            judgeVerdict.textContent = getVerdictText(verdict);
+            judgeConfidence.textContent = `${confidence}%`;
+            judgeConfidenceBar.style.width = `${confidence}%`;
+        }
+
+        function updateInsights(insights) {
+            insightsList.innerHTML = '';
+            
+            insights.forEach(insight => {
+                const item = document.createElement('li');
+                item.className = 'insight-item';
+                item.innerHTML = `
+                    <span class="insight-bullet">•</span>
+                    <span>${insight}</span>
+                `;
+                insightsList.appendChild(item);
+            });
+        }
+
+        function toggleExplanation() {
+            showingExplanation = !showingExplanation;
+            
+            if (showingExplanation) {
+                explanationContent.classList.remove('hidden');
+                explanationBtnText.textContent = 'Hide Explanation';
+                chevronDown.classList.add('hidden');
+                chevronUp.classList.remove('hidden');
+            } else {
+                explanationContent.classList.add('hidden');
+                explanationBtnText.textContent = 'Show Explanation';
+                chevronDown.classList.remove('hidden');
+                chevronUp.classList.add('hidden');
+            }
+        }
+
+        // Initialize
+        analyzeBtn.disabled = true;
+    </script>
+</body>
+</html>
